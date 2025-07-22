@@ -1,0 +1,1 @@
+This extension doesn't collect user data. It just runs locally on the user's browser.
