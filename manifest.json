@@ -1,12 +1,20 @@
 {
     "name": "DocSend Slide Deck Downloader",
-    "version": "1.7",
+    "version": "2.3",
     "description": "Download any DocSend slide deck as a PDF",
-    "permissions": ["declarativeContent", "activeTab", "webRequest", "webRequestBlocking", "*://*.docsend.com/", "*://*.cloudfront.net/"],
-    "background": {
-        "scripts": ["background.js"]
+    "permissions": ["declarativeContent", "activeTab", "scripting", "declarativeNetRequest"],
+    "host_permissions": ["*://*.docsend.com/", "*://*.cloudfront.net/"],
+    "declarative_net_request": {
+        "rule_resources": [{
+            "id": "cors_rules",
+            "enabled": true,
+            "path": "rules.json"
+        }]
     },
-    "page_action": {
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
         "default_title": "Download a DocSend slide deck as a PDF"
     },
     "icons": {
@@ -14,5 +22,5 @@
         "48": "./assets/icon48.png",
         "128": "./assets/icon128.png"
     },
-    "manifest_version": 2
+    "manifest_version": 3
 }

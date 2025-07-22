@@ -1,6 +1,22 @@
+// Debug utility functions - only declare if not already defined
+if (typeof window.isDebugMode === 'undefined') {
+    window.isDebugMode = () => {
+        return window.location.search.includes('downloaderDebug=true');
+    };
+}
+
+if (typeof window.debugLog === 'undefined') {
+    window.debugLog = (...args) => {
+        if (window.isDebugMode()) {
+            console.log(...args);
+        }
+    };
+}
+
 let connection;
 let numSlides = parseInt((document.getElementsByClassName("page-label")[0].innerHTML).split(" ")[0]);
-let baseUrl = window.location.href;
+// Strip query parameters from URL to avoid malformed API endpoints
+let baseUrl = window.location.origin + window.location.pathname;
 let metadataEndpoint = baseUrl.charAt(baseUrl.length-1) == "/" ? baseUrl + "page_data/" : baseUrl + "/page_data/";
 let slideImageUrls = [];
 
@@ -19,19 +35,72 @@ let userIsAuthenticated = () => {
 let getSlideImageUrls = async () => {
     for(let i=1; i<=numSlides; i++) {
         let url = metadataEndpoint + String(i);
+        window.debugLog(`Fetching slide ${i} from:`, url);
         await fetch(url)
         .then((response) => {
+            window.debugLog(`Slide ${i} response status:`, response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             return response.json();
         })
         .then((data) => {
+            window.debugLog(`Slide ${i} data:`, data);
             slideImageUrls.push(data.imageUrl);
+            showCustomAlert(`Generating slide deck as PDF: ${i}/${numSlides} slides complete...`);
         })
+        .catch((error) => {
+            console.error(`Error fetching slide ${i}:`, error);
+        });
     }
 }
 
+// Wait for dependencies to be available
+const waitForDependencies = (maxAttempts = 10, delay = 100) => {
+    return new Promise((resolve, reject) => {
+        let attempts = 0;
+        
+        const checkDeps = () => {
+            attempts++;
+            window.debugLog(`Dependency check attempt ${attempts}/${maxAttempts}`);
+            window.debugLog('jsPDF available:', typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF !== 'undefined');
+            window.debugLog('buildPdf available:', typeof buildPdf !== 'undefined');
+            
+            if (typeof window.jspdf !== 'undefined' && 
+                typeof window.jspdf.jsPDF !== 'undefined' && 
+                typeof buildPdf !== 'undefined') {
+                window.debugLog('All dependencies ready!');
+                resolve();
+            } else if (attempts >= maxAttempts) {
+                reject(new Error(`Dependencies not available after ${maxAttempts} attempts`));
+            } else {
+                setTimeout(checkDeps, delay);
+            }
+        };
+        
+        checkDeps();
+    });
+};
+
 let generateSlideDeckPdf = async () => {
-    await getSlideImageUrls();
-    buildPdf(slideImageUrls);
+    try {
+        window.debugLog('=== Starting PDF generation ===');
+        
+        // Wait for dependencies
+        await waitForDependencies();
+        
+        window.debugLog('Getting slide URLs...');
+        await getSlideImageUrls();
+        
+        window.debugLog('Building PDF with', slideImageUrls.length, 'slides...');
+        buildPdf(slideImageUrls);
+        
+    } catch (error) {
+        console.error('Error in generateSlideDeckPdf:', error);
+        slideDeckGenerationInProgress = false;
+        hideCustomAlert();
+        showDefaultAlert("ERROR: " + error.message);
+    }
 }
 
 chrome.runtime.onConnect.addListener((port) => {
@@ -61,12 +130,3 @@ chrome.runtime.onConnect.addListener((port) => {
 })
 
 
-stream.on("finish", () => {
-    slideDeckGenerationInProgress = false;
-    let blobUrl = stream.toBlobURL('application/pdf');
-    let totalTime = new Date().getTime() - startTime;
-    initiateDownload(blobUrl);
-    hideCustomAlert();
-    showDefaultAlert("Done ! Slide deck PDF generated in " + String(totalTime) + " ms.");
-    connection.postMessage({requestType: "SET_JOB_COMPLETE"});
-})

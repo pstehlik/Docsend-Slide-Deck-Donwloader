@@ -1,0 +1,48 @@
+[
+    {
+        "id": 1,
+        "priority": 1,
+        "action": {
+            "type": "modifyHeaders",
+            "responseHeaders": [
+                {
+                    "header": "Access-Control-Allow-Origin",
+                    "operation": "set",
+                    "value": "*"
+                },
+                {
+                    "header": "Access-Control-Allow-Methods",
+                    "operation": "set",
+                    "value": "GET, OPTIONS"
+                }
+            ]
+        },
+        "condition": {
+            "urlFilter": "*://docsend.com/*",
+            "resourceTypes": ["xmlhttprequest", "image"]
+        }
+    },
+    {
+        "id": 2,
+        "priority": 1,
+        "action": {
+            "type": "modifyHeaders",
+            "responseHeaders": [
+                {
+                    "header": "Access-Control-Allow-Origin",
+                    "operation": "set",
+                    "value": "*"
+                },
+                {
+                    "header": "Access-Control-Allow-Methods",
+                    "operation": "set",
+                    "value": "GET, OPTIONS"
+                }
+            ]
+        },
+        "condition": {
+            "urlFilter": "*://*.cloudfront.net/*",
+            "resourceTypes": ["xmlhttprequest", "image"]
+        }
+    }
+]
