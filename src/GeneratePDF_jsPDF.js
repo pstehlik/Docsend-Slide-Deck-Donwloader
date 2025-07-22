@@ -61,7 +61,7 @@ const addSlidesToPDF = async (doc, imageUrls) => {
     for (let i = 0; i < imageUrls.length; i++) {
         try {
             numSlidesComplete++;
-            showCustomAlert(`Generating slide deck as PDF: ${numSlidesComplete}/${imageUrls.length} slides complete...`);
+            showCustomAlert(`Generating PDF for slide ${numSlidesComplete}/${imageUrls.length}...`);
             
             window.debugLog(`Loading image ${i + 1}/${imageUrls.length}:`, imageUrls[i]);
             const imageData = await loadImageAsDataURL(imageUrls[i]);

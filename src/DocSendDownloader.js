@@ -47,7 +47,7 @@ let getSlideImageUrls = async () => {
         .then((data) => {
             window.debugLog(`Slide ${i} data:`, data);
             slideImageUrls.push(data.imageUrl);
-            showCustomAlert(`Generating slide deck as PDF: ${i}/${numSlides} slides complete...`);
+            showCustomAlert(`Fetching slide ${i}/${numSlides}...`);
         })
         .catch((error) => {
             console.error(`Error fetching slide ${i}:`, error);
