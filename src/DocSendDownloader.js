@@ -105,6 +105,8 @@ let generateSlideDeckPdf = async () => {
 
 chrome.runtime.onConnect.addListener((port) => {
     connection = port;
+    // MV3 service worker can be terminated mid-job (idle timeout), closing the port
+    port.onDisconnect.addListener(() => { connection = null; });
     port.onMessage.addListener((message) => {
         if (userIsAuthenticated()) {
             if (message.requestType == "GENERATE_PDF") {
